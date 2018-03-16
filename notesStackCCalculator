@@ -1,0 +1,169 @@
+//calculator
+/*
+
+
+2+3+4*(5+6/h4)
+
+h meaning half of
+
+should be 37.
+
+left to right associativity only.
+only one digit non negative numbers.
+
+Can make two stacks
+
+---	    ---
+vals    ops
+
+stack of values and stack of operators
+
+2+3+4*(5+6/h4)
+
+
+beore processing any char in string, add "(" to operator stack.
+if char is digit: push it on # stack
+if char is oprtor: while top of oprtor stack is an operator 
+(not paren) whose precedence is >= the precedence of char's operator , perform top of operator stack operation.
+Then  push char on oprtor stack.
+If char is (: push it on oprtor stack
+if char is ): perform the top of operator stack operation until we get to the left (, which we remove from stack
+
+
+
+3       +
+2       (
+---	    ---
+vals    ops
+
+
++3+4*(5+6/h4)
+
+*/
+
+#include <algorithm>
+#include <iostream>
+#include <string>
+#include <stack>
+#include <cctype>	//is digit
+
+using namespace std ;
+
+unsigned calculate(const string & line);
+bool in(char c, const string & s);
+void doop(stack<unsigned> & val, stack<char> & ops);
+unsigned prec(char op);
+
+
+int main()
+{
+
+	cout << "Enter lines, I'll evaluate them\n";
+
+	for (string line; getline(cin, line) && !line.empty();)
+	{
+		cout << line << " == " << calculate(line) << endl;
+
+	 }
+	
+}
+
+
+unsigned calculate(const string & line)
+{
+	stack<unsigned>   val; //stack of unsigned values
+	stack <char> ops; //stack of operators
+
+	string lineP = '(' + line + ')';
+
+
+	for (unsigned i = 0; i < line.size(); i++)
+	{
+
+		char c = line[i];
+
+
+
+		if (c == ' ') continue;
+		if (isdigit(c))
+			//if you have a digit, you push it on to the stack		
+			val.push(c - '0'); // will get you the askey code, if you subtract the '0' then you get the real value.
+		else if (in(c, "h*""/+"))
+		{
+
+			ops.top();//without changing the stack, that tell us whats at the top of the stack.
+				while (prec(ops.top()) >= prec(c))
+					doop(val, ops);
+			ops.push(c);
+		}
+		else if(c == '(')
+		{
+			ops.push(c);	
+		}
+		else if (c == ')')
+		{
+			while (ops.top() != '(')
+				doop(val, ops);
+			ops.pop();
+		}
+
+		
+			
+	} //for 
+	return val.top();
+}
+
+void doop(stack<unsigned> & val, stack<char> & ops)
+{
+	char op = ops.top();
+	ops.pop();
+	unsigned lhs, rhs, result;
+	rhs = val.top();
+	val.pop();
+
+	if (op == 'h')
+		 val.push(rhs / 2);
+	else
+	{//binary 
+		lhs = val.top();
+		val.pop();
+		switch (op)
+		{
+
+		case '*': result = lhs * rhs; break;
+		case '/': result = lhs / rhs; break;
+		case'+': result = lhs + rhs; break;
+
+
+		}
+	}
+	val.push(result);
+	//doop
+}
+
+
+bool in(char c, const string & s)
+{
+	// ?
+
+	return s.find(c) != CHAR_MAX;
+}
+
+unsigned prec(char op)
+{
+	/*
+	
+	h   3 
+	* / 2		
+	+	1
+	)	)
+	
+	*/
+	return op == 'h'           ? 3 :
+		op == '*' || op == '/' ? 2 :
+		op == '+'              ? 1 : 0;
+
+}
+
+// need to use ! & | () the two values F for false and T for true;
+//for ex. !(T & F | (F & !T)) == T
